@@ -2,6 +2,7 @@ from flask import Flask, request, send_file
 import cv2
 import numpy as np
 import io
+import os
 
 app = Flask(__name__)
 
@@ -29,3 +30,7 @@ def crop_image():
     io_buf = io.BytesIO(buffer)
 
     return send_file(io_buf, mimetype='image/png')
+    
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # 默认为5000，Render会传入PORT
+    app.run(host="0.0.0.0", port=port)
