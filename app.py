@@ -14,9 +14,9 @@ def home():
 def crop_base64_image():
     try:
         data = request.get_data()
-        img_bytes = base64.b64decode(data)
-        img_arr = np.frombuffer(img_bytes, np.uint8)
-        img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+        #img_bytes = base64.b64decode(data)
+        #img_arr = np.frombuffer(img_bytes, np.uint8)
+        img = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
         if img is None:
             return jsonify({'error': 'Invalid image'}), 400
