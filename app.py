@@ -1,34 +1,34 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, jsonify
+import base64
 import cv2
 import numpy as np
-import io
-import os
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "Binary Image Crop API is running!"
-
 @app.route("/crop", methods=["POST"])
 def crop_image():
-    # 🔥 从原始请求体中读取图像字节
-    img_bytes = request.get_data()
-    img_arr = np.frombuffer(img_bytes, np.uint8)
-    img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+    data = request.json
+    image_base64 = data.get("imageBase64")
+    if not image_base64:
+        return jsonify({"error": "No imageBase64 provided"}), 400
 
-    if img is None:
-        return {"error": "Invalid image"}, 400
+    # 解码 base64 图片
+    try:
+        image_data = base64.b64decode(image_base64)
+        np_arr = np.frombuffer(image_data, np.uint8)
+        img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    except Exception as e:
+        return jsonify({"error": f"Failed to decode image: {str(e)}"}), 400
 
-    # ✂️ 裁剪上方 2300 像素
+    # 剪裁图片上方 2300 像素区域
     cropped_img = img[:2300, :]
 
-    # ⏳ 转为 PNG 二进制返回
-    _, buffer = cv2.imencode('.png', cropped_img)
-    io_buf = io.BytesIO(buffer)
+    # 再编码回 base64
+    _, buffer = cv2.imencode(".png", cropped_img)
+    cropped_base64 = base64.b64encode(buffer).decode("utf-8")
 
-    return send_file(io_buf, mimetype='image/png')
+    return jsonify({"cropped_image_base64": cropped_base64})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=10000)
+
