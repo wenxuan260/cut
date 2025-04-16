@@ -11,11 +11,30 @@ def home():
     return 'Flask OCR Crop API is running!'
 
 @app.route('/crop', methods=['POST'])
-def crop_base64_image():
+def crop_image():
     try:
         data = request.get_data()
         #img_bytes = base64.b64decode(data)
         img_arr = np.frombuffer(data, np.uint8)
+        img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+
+        if img is None:
+            return jsonify({'error': 'Invalid image'}), 400
+
+        cropped_img = img[:2300, :]
+        _, buffer = cv2.imencode('.png', cropped_img)
+        cropped_base64 = base64.b64encode(buffer).decode('utf-8')
+
+        return cropped_base64  # 不加前缀，方便 AI Builder 识别
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/cropbase64', methods=['POST'])
+def crop_base64_image():
+    try:
+        data = request.get_data()
+        img_bytes = base64.b64decode(data)
+        img_arr = np.frombuffer(img_bytes, np.uint8)
         img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
 
         if img is None:
