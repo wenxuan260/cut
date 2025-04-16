@@ -48,6 +48,18 @@ def crop_base64_image():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/cut_image', methods=['POST'])
+def cut_image():
+    img_data = request.get_data()
+    img = Image.open(io.BytesIO(img_data))
+ 
+    cropped = img.crop((0, 0, 100, 100))
+
+    output = io.BytesIO()
+    cropped.save(output, format='PNG')
+    base64_img = base64.b64encode(output.getvalue()).decode('utf-8')
+    return base64_img
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
